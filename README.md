@@ -26,7 +26,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/Harshjs-Gupta/MorphoMind">
-    <img src="/pixelmind/src/assets/logo/MorphoMind.png" alt="Logo" width="90" height="90">
+    <img src="/morphomind/src/assets/logo/MorphoMind.png" alt="Logo" width="90" height="90">
   </a>
 
   <h3 align="center">MorphoMind</h3>
@@ -128,7 +128,7 @@ _Below is an example of how you can instruct your audience on installing and set
 
 1. Clone the repo
    ```sh
-   git clone https://github.com/Harshjs-Gupta/PixelMind
+   git clone https://github.com/Harshjs-Gupta/MorphoMind
    ```
 2. Install PNPM packages
    ```sh
@@ -145,7 +145,7 @@ _Below is an example of how you can instruct your audience on installing and set
 <!-- USAGE EXAMPLES -->
 
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
-[linkedin-url]: https://www.linkedin.com/in/harsh-gupta-b56a63265/
+[linkedin-url]: https://www.linkedin.com/in/harsh-gupta-js/
 [product-screenshot]: /pixelmind/public/pixelMind.gif
 [Next.js]: https://img.shields.io/badge/next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white
 [Next-url]: https://nextjs.org/
@@ -153,7 +153,7 @@ _Below is an example of how you can instruct your audience on installing and set
 [React-url]: https://reactjs.org/
 [github-shield]: https://img.shields.io/badge/GitHub-Repo-blue?logo=github
 [github-url]: https://github.com/Harshjs-Gupta/
-[Firebase-badge]: https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=white
-[Firebase-url]: https://firebase.google.com/
+
+[![Firebase][Firebase-badge]][Firebase-url]
 [Tailwind]: https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white
 [Tailwind-url]: https://tailwindcss.com/
