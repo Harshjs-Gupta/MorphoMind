@@ -4,12 +4,60 @@ import { FiSend, FiUser, FiCpu, FiLoader } from "react-icons/fi";
 import { GoogleGenAI } from "@google/genai";
 import PageDropdown from "@/components/PageDropdown";
 
-const ai = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GOOGLE_API_KEY }); // <-- Replace with your key
+const ai = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GOOGLE_API_KEY });
+
+const TypingEffect = ({ text, speed = 5, onComplete }) => {
+  const [displayedText, setDisplayedText] = useState("");
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    setDisplayedText("");
+    setCurrentIndex(0);
+  }, [text]);
+
+  useEffect(() => {
+    if (currentIndex < text.length) {
+      const timeout = setTimeout(() => {
+        setDisplayedText((prev) => prev + text[currentIndex]);
+        setCurrentIndex((prev) => prev + 1);
+      }, speed);
+
+      return () => clearTimeout(timeout);
+    } else if (onComplete && currentIndex === text.length && text.length > 0) {
+      onComplete();
+    }
+  }, [currentIndex, text, speed, onComplete]);
+
+  const formatAnswer = (txt) => {
+    return (
+      "<p>" +
+      txt
+        .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+        .replace(/\n{2,}/g, "</p><p>")
+        .replace(/\n/g, "<br>") +
+      "</p>"
+    );
+  };
+
+  return (
+    <div>
+      <div
+        className="text-sm md:text-base ai-message"
+        style={{ lineHeight: "1.8" }}
+        dangerouslySetInnerHTML={{ __html: formatAnswer(displayedText) }}
+      />
+      {currentIndex < text.length && (
+        <span className="inline-block w-1 h-4 bg-white animate-pulse ml-1" />
+      )}
+    </div>
+  );
+};
 
 const TextGeneratorPage = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [typingMessageIndex, setTypingMessageIndex] = useState(null);
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -30,47 +78,50 @@ const TextGeneratorPage = () => {
 
     try {
       const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash", // or "gemini-1.5-flash" if that's what you have access to
+        model: "gemini-2.5-flash",
         contents: input,
       });
 
-      setMessages([...newMessages, { text: response.text, sender: "ai" }]);
+      const aiMessage = { text: response.text, sender: "ai" };
+      setMessages([...newMessages, aiMessage]);
+      setTypingMessageIndex(newMessages.length); // Set the index of the new AI message
     } catch (error) {
       console.error(error);
-      setMessages([
-        ...newMessages,
-        {
-          text: "Sorry, I encountered an error. Please try again.",
-          sender: "ai",
-        },
-      ]);
+      const errorMessage = {
+        text: "Sorry, I encountered an error. Please try again.",
+        sender: "ai",
+      };
+      setMessages([...newMessages, errorMessage]);
+      setTypingMessageIndex(newMessages.length);
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleKeyPress = (e) => {
-    if (e.key === "Enter") {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
       handleSend();
     }
   };
 
-  function formatAnswer(text) {
+  const formatAnswer = (text) => {
     return (
       "<p>" +
       text
-        .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>") // bold
-        .replace(/\n{2,}/g, "</p><p>") // paragraph breaks
-        .replace(/\n/g, "<br>") + // single line breaks
+        .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+        .replace(/\n{2,}/g, "</p><p>")
+        .replace(/\n/g, "<br>") +
       "</p>"
     );
-  }
+  };
 
   return (
     <div className="flex flex-col h-screen bg-[var(--background)] pt-20 text-[var(--foreground)]">
       <div className="fixed top-18 right-0 p-6 z-50">
         <PageDropdown />
       </div>
+
       <main className="flex-1 overflow-y-auto p-4 md:p-6">
         <div className="max-w-4xl mx-auto space-y-6">
           {messages.length === 0 && !isLoading && (
@@ -81,6 +132,7 @@ const TextGeneratorPage = () => {
               </p>
             </div>
           )}
+
           {messages.map((msg, index) => (
             <div
               key={index}
@@ -93,23 +145,36 @@ const TextGeneratorPage = () => {
                   <FiCpu className="text-white" />
                 </div>
               )}
+
               <div
-                className={`max-h-fit md:max-w-lg p-3 rounded-2xl ${
+                className={`max-h-fit w-max p-3 rounded-2xl ${
                   msg.sender === "user"
                     ? "bg-blue-600 text-white rounded-br-none"
                     : "bg-white/10 text-white rounded-bl-none"
                 }`}
               >
                 {msg.sender === "ai" ? (
-                  <div
-                    className="text-sm md:text-base ai-message"
-                    style={{ lineHeight: "1.8" }}
-                    dangerouslySetInnerHTML={{ __html: formatAnswer(msg.text) }}
-                  />
+                  // Only animate the latest AI message
+                  index === typingMessageIndex ? (
+                    <TypingEffect
+                      text={msg.text}
+                      speed={20}
+                      onComplete={() => setTypingMessageIndex(null)}
+                    />
+                  ) : (
+                    <div
+                      className="text-sm md:text-base ai-message"
+                      style={{ lineHeight: "1.8" }}
+                      dangerouslySetInnerHTML={{
+                        __html: formatAnswer(msg.text),
+                      }}
+                    />
+                  )
                 ) : (
                   <p className="text-sm md:text-base">{msg.text}</p>
                 )}
               </div>
+
               {msg.sender === "user" && (
                 <div className="w-8 h-8 flex-shrink-0 rounded-full bg-gray-700 flex items-center justify-center">
                   <FiUser className="text-white" />
@@ -117,6 +182,7 @@ const TextGeneratorPage = () => {
               )}
             </div>
           ))}
+
           {isLoading && (
             <div className="flex items-start gap-4 justify-start">
               <div className="w-8 h-8 flex-shrink-0 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center">
@@ -127,6 +193,7 @@ const TextGeneratorPage = () => {
               </div>
             </div>
           )}
+
           <div ref={messagesEndRef} />
         </div>
       </main>
